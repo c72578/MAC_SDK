@@ -1,4 +1,4 @@
-#Monkey's Audio SDK
+# Monkey's Audio SDK
 
 This SDK provides the tools to incorporate Monkey's Audio into your own projects. Cruising through the examples is probably the easiest way to learn how to use everything. If you use C++, it's recommended that you simply statically link to maclib.lib. If you use another language or want dynamic linkage, you can use the C-style interface of the dll. (see Decompress\Sample 3 for an example)
 
@@ -10,4 +10,4 @@ http://monkeysaudio.com/contact.html
 
 Thanks and good luck :)
 
-- All materials and programs copyrighted ©2000-2017 by Matthew T. Ashland -
+# All materials and programs copyrighted ©2000-2017 by Matthew T. Ashland
