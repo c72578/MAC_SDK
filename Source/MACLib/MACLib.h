@@ -332,11 +332,11 @@ public:
     //        NULL for the pHeaderData and MAC will automatically create the appropriate WAV header
     //        on decompression)
     //////////////////////////////////////////////////////////////////////////////////////////////
-
+#ifndef EXCLUDE_CIO
     virtual int Start(const str_utfn * pOutputFilename, const WAVEFORMATEX * pwfeInput, 
         unsigned int nMaxAudioBytes = MAX_AUDIO_BYTES_UNKNOWN, intn nCompressionLevel = COMPRESSION_LEVEL_NORMAL, 
         const void * pHeaderData = NULL, intn nHeaderBytes = CREATE_WAV_HEADER_ON_DECOMPRESSION) = 0;
-
+#endif
     virtual int StartEx(CIO * pioOutput, const WAVEFORMATEX * pwfeInput, 
         unsigned int nMaxAudioBytes = MAX_AUDIO_BYTES_UNKNOWN, intn nCompressionLevel = COMPRESSION_LEVEL_NORMAL,
         const void * pHeaderData = NULL, intn nHeaderBytes = CREATE_WAV_HEADER_ON_DECOMPRESSION) = 0;

@@ -16,7 +16,9 @@ public:
     ~CAPECompress();
 
     // start encoding
+#ifndef EXCLUDE_CIO
     int Start(const wchar_t * pOutputFilename, const WAVEFORMATEX * pwfeInput, unsigned int nMaxAudioBytes, intn nCompressionLevel = COMPRESSION_LEVEL_NORMAL, const void * pHeaderData = NULL, intn nHeaderBytes = CREATE_WAV_HEADER_ON_DECOMPRESSION);
+#endif
     int StartEx(CIO * pioOutput, const WAVEFORMATEX * pwfeInput, unsigned int nMaxAudioBytes, intn nCompressionLevel = COMPRESSION_LEVEL_NORMAL, const void * pHeaderData = NULL, intn nHeaderBytes = CREATE_WAV_HEADER_ON_DECOMPRESSION);
     
     // add data / compress data

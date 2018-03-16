@@ -58,6 +58,7 @@ IAPEDecompress * CreateIAPEDecompressCore(CAPEInfo * pAPEInfo, int nStartBlock, 
     return pAPEDecompress;
 }
 
+#ifndef EXCLUDE_CIO
 IAPEDecompress * __stdcall CreateIAPEDecompress(const str_utfn * pFilename, int * pErrorCode)
 {
     // error check the parameters
@@ -108,6 +109,7 @@ IAPEDecompress * __stdcall CreateIAPEDecompress(const str_utfn * pFilename, int 
     // return
     return pAPEDecompress;
 }
+#endif
 
 IAPEDecompress * __stdcall CreateIAPEDecompressEx(CIO * pIO, int * pErrorCode)
 {

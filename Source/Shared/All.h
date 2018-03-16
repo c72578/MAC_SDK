@@ -24,7 +24,21 @@ Global includes
 
 #if defined(PLATFORM_WINDOWS)
     #include "WindowsEnvironment.h"
+#if defined(PLATFORM_WINDOWS_NO_HEADER)
+    #define NEAR
+    #define FAR
+    #define MAX_PATH    4096
+    #define BOOL int
+    #define TRUE 1
+    #define FALSE 0
+    #define HWND long
+    typedef void * HANDLE;
+	#include <IntSafe.h>
+    #include <string.h>
+	#define ZeroMemory(p,l) memset((p), 0, (l))
+#else
     #include <windows.h>
+#endif
     #include <tchar.h>
     #include <assert.h>
 #else
@@ -131,9 +145,13 @@ Global macros
     #define IO_HEADER_FILE                              "WinFileIO.h"
     #define IO_CLASS_NAME                               CWinFileIO
     #define DLLEXPORT                                   __declspec(dllexport)
+#if defined(PLATFORM_WINDOWS_NO_HEADER)
+    #define SLEEP(MILLISECONDS)
+#else
     #define SLEEP(MILLISECONDS)                         ::Sleep(MILLISECONDS)
     #define MESSAGEBOX(PARENT, TEXT, CAPTION, TYPE)     ::MessageBox(PARENT, TEXT, CAPTION, TYPE)
     #define PUMP_MESSAGE_LOOP                           { MSG Msg; while (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) != 0) { TranslateMessage(&Msg); DispatchMessage(&Msg); } }
+#endif
     #define ODS                                         OutputDebugString
     #define TICK_COUNT_TYPE                             unsigned long
     #define TICK_COUNT_READ(VARIABLE)                   VARIABLE = GetTickCount()

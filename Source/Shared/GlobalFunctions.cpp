@@ -35,6 +35,7 @@ intn WriteSafe(CIO * pIO, void * pBuffer, intn nBytes)
     return nResult;
 }
 
+#ifndef EXCLUDE_CIO
 bool FileExists(wchar_t * pFilename)
 {    
     if (0 == wcscmp(pFilename, L"-")  ||  0 == wcscmp(pFilename, L"/dev/stdin"))
@@ -70,6 +71,7 @@ bool FileExists(wchar_t * pFilename)
 
 #endif
 }
+#endif
 
 void * AllocateAligned(intn nBytes, intn nAlignment)
 {

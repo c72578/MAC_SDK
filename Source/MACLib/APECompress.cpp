@@ -30,6 +30,7 @@ CAPECompress::~CAPECompress()
     }
 }
 
+#ifndef EXCLUDE_CIO
 int CAPECompress::Start(const wchar_t * pOutputFilename, const WAVEFORMATEX * pwfeInput, unsigned int nMaxAudioBytes, intn nCompressionLevel, const void * pHeaderData, intn nHeaderBytes)
 {
     m_pioOutput = new IO_CLASS_NAME;
@@ -50,6 +51,7 @@ int CAPECompress::Start(const wchar_t * pOutputFilename, const WAVEFORMATEX * pw
 
     return ERROR_SUCCESS;
 }
+#endif
 
 int CAPECompress::StartEx(CIO * pioOutput, const WAVEFORMATEX * pwfeInput, unsigned int nMaxAudioBytes, intn nCompressionLevel, const void * pHeaderData, intn nHeaderBytes)
 {

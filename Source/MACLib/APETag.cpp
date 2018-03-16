@@ -97,6 +97,7 @@ const wchar_t * CAPETag::s_aryID3GenreNames[CAPETag::s_nID3GenreCount] =
 	L"Crossover", L"Contemporary C", L"Christian Rock", L"Merengue", L"Salsa", L"Thrash Metal", L"Anime", L"JPop", L"SynthPop" 
 };
 
+#ifndef EXCLUDE_CIO
 CAPETag::CAPETag(const str_utfn * pFilename, bool bAnalyze)
 {
     m_spIO.Assign(new IO_CLASS_NAME);
@@ -110,6 +111,7 @@ CAPETag::CAPETag(const str_utfn * pFilename, bool bAnalyze)
     if (bAnalyze)
         Analyze();
 }
+#endif
 
 CAPETag::CAPETag(CIO * pIO, bool bAnalyze)
 {

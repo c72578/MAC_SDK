@@ -12,6 +12,7 @@ CAPEInfo:
 namespace APE
 {
 
+#ifndef EXCLUDE_CIO
 /*****************************************************************************************
 Construction
 *****************************************************************************************/
@@ -62,7 +63,7 @@ CAPEInfo::CAPEInfo(int * pErrorCode, const wchar_t * pFilename, CAPETag * pTag)
     // update
     CheckHeaderInformation();
 }
-
+#endif
 CAPEInfo::CAPEInfo(int * pErrorCode, CIO * pIO, CAPETag * pTag)
 {
     *pErrorCode = ERROR_SUCCESS;
