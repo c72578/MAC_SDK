@@ -7,7 +7,21 @@ class CallbackCIO : public CIO
 {
 public:
 	// construction / destruction
-	CallbackCIO(APE_CIO_Callbacks* pCIO) { m_pCIO = pCIO; }
+	CallbackCIO(
+        void * pUserData,
+        proc_APECIO_Read CIO_Read,
+        proc_APECIO_Write CIO_Write,
+        proc_APECIO_Seek CIO_Seek,
+        proc_APECIO_GetPosition CIO_GetPosition,
+        proc_APECIO_GetSize CIO_GetSize)
+    { 
+        m_pUserData = pUserData;
+        m_CIO_Read = CIO_Read;
+        m_CIO_Write = CIO_Write;
+        m_CIO_Seek = CIO_Seek;
+        m_CIO_GetPosition = CIO_GetPosition;
+        m_CIO_GetSize = CIO_GetSize;
+    }
 	~CallbackCIO() {}
 
 	// open / close
@@ -23,17 +37,17 @@ public:
 	// read / write
 	int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
 	{
-		return m_pCIO->Read(m_pCIO, pBuffer, nBytesToRead, pBytesRead);
+		return m_CIO_Read(m_pUserData, pBuffer, nBytesToRead, pBytesRead);
 	}
 	int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
 	{
-		return m_pCIO->Write(m_pCIO, pBuffer, nBytesToWrite, pBytesWritten);
+		return m_CIO_Write(m_pUserData, pBuffer, nBytesToWrite, pBytesWritten);
 	}
 
 	// seek
 	int Seek(intn nDistance, unsigned int nMoveMode)
 	{
-		return m_pCIO->Seek(m_pCIO, nDistance, nMoveMode);
+		return m_CIO_Seek(m_pUserData, nDistance, nMoveMode);
 	}
 
 	// other functions
@@ -55,11 +69,11 @@ public:
 	// attributes
 	int GetPosition()
     { 
-        return m_pCIO->GetPosition(m_pCIO); 
+        return m_CIO_GetPosition(m_pUserData); 
     }
 	unsigned int GetSize()
     { 
-        return m_pCIO->GetSize(m_pCIO);
+        return m_CIO_GetSize(m_pUserData);
     }
 	int GetName(wchar_t * pBuffer) 
 	{ 
@@ -67,7 +81,12 @@ public:
 	}
 
 private:
-	APE_CIO_Callbacks * m_pCIO;
+    void * m_pUserData;
+    proc_APECIO_Read m_CIO_Read;
+    proc_APECIO_Write m_CIO_Write;
+    proc_APECIO_Seek m_CIO_Seek;
+    proc_APECIO_GetPosition m_CIO_GetPosition;
+    proc_APECIO_GetSize m_CIO_GetSize;
 };
 
 int __stdcall GetVersionNumber()
@@ -78,6 +97,23 @@ int __stdcall GetVersionNumber()
 const wchar_t *__stdcall GetVersionString()
 {
     return MAC_VERSION_STRING;
+}
+
+APE_CIO_HANDLE __stdcall c_APECIO_Create(void* pUserData,
+        proc_APECIO_Read CIO_Read,
+        proc_APECIO_Write CIO_Write,
+        proc_APECIO_Seek CIO_Seek,
+        proc_APECIO_GetPosition CIO_GetPosition,
+        proc_APECIO_GetSize CIO_GetSize)
+{
+    return (APE_CIO_HANDLE) new CallbackCIO(pUserData, CIO_Read, CIO_Write, CIO_Seek, CIO_GetPosition, CIO_GetSize);
+}
+
+void __stdcall c_APECIO_Destroy(APE_CIO_HANDLE hCIO)
+{
+    CallbackCIO * pCIO = (CallbackCIO *) hCIO;
+    if (pCIO)
+        delete pCIO;
 }
 
 /*****************************************************************************************
@@ -96,9 +132,9 @@ APE_DECOMPRESS_HANDLE __stdcall c_APEDecompress_CreateW(const str_utfn * pFilena
 }
 #endif
 
-APE_DECOMPRESS_HANDLE __stdcall c_APEDecompress_CreateEx(APE_CIO_Callbacks* pCIO, int * pErrorCode)
+APE_DECOMPRESS_HANDLE __stdcall c_APEDecompress_CreateEx(APE_CIO_HANDLE hCIO, int * pErrorCode)
 {
-    return (APE_DECOMPRESS_HANDLE)CreateIAPEDecompressEx(new CallbackCIO(pCIO), pErrorCode);
+    return (APE_DECOMPRESS_HANDLE)CreateIAPEDecompressEx((CallbackCIO *) hCIO, pErrorCode);
 }
 
 void __stdcall c_APEDecompress_Destroy(APE_DECOMPRESS_HANDLE hAPEDecompress)
@@ -118,7 +154,7 @@ int __stdcall c_APEDecompress_Seek(APE_DECOMPRESS_HANDLE hAPEDecompress, int nBl
     return ((IAPEDecompress *) hAPEDecompress)->Seek(nBlockOffset);
 }
 
-int __stdcall c_APEDecompress_GetInfo(APE_DECOMPRESS_HANDLE hAPEDecompress, APE_DECOMPRESS_FIELDS Field, int nParam1, int nParam2)
+intn __stdcall c_APEDecompress_GetInfo(APE_DECOMPRESS_HANDLE hAPEDecompress, APE_DECOMPRESS_FIELDS Field, int nParam1, int nParam2)
 {
     return ((IAPEDecompress *) hAPEDecompress)->GetInfo(Field, nParam1, nParam2);
 }
@@ -139,9 +175,10 @@ void __stdcall c_APECompress_Destroy(APE_COMPRESS_HANDLE hAPECompress)
 }
 
 #ifndef EXCLUDE_CIO
-int __stdcall c_APECompress_StartW(APE_COMPRESS_HANDLE hAPECompress, const str_utfn * pOutputFilename, const APE::WAVEFORMATEX * pwfeInput, int nMaxAudioBytes, int nCompressionLevel, const void * pHeaderData, int nHeaderBytes)
+int __stdcall c_APECompress_Start(APE_COMPRESS_HANDLE hAPECompress, const char * pOutputFilename, const APE::WAVEFORMATEX * pwfeInput, int nMaxAudioBytes, int nCompressionLevel, const void * pHeaderData, int nHeaderBytes)
 {
-	return ((IAPECompress *)hAPECompress)->Start(pOutputFilename, pwfeInput, nMaxAudioBytes, nCompressionLevel, pHeaderData, nHeaderBytes);
+    CSmartPtr<wchar_t> spOutputFilename(CAPECharacterHelper::GetUTF16FromANSI(pOutputFilename), TRUE);
+    return ((IAPECompress *) hAPECompress)->Start(spOutputFilename, pwfeInput, nMaxAudioBytes, nCompressionLevel, pHeaderData, nHeaderBytes);
 }
 
 int __stdcall c_APECompress_StartW(APE_COMPRESS_HANDLE hAPECompress, const str_utfn * pOutputFilename, const APE::WAVEFORMATEX * pwfeInput, int nMaxAudioBytes, int nCompressionLevel, const void * pHeaderData, int nHeaderBytes)
@@ -150,9 +187,9 @@ int __stdcall c_APECompress_StartW(APE_COMPRESS_HANDLE hAPECompress, const str_u
 }
 #endif
 
-int __stdcall c_APECompress_StartEx(APE_COMPRESS_HANDLE hAPECompress, APE_CIO_Callbacks* pCIO, const APE::WAVEFORMATEX * pwfeInput, int nMaxAudioBytes, int nCompressionLevel, const void * pHeaderData, int nHeaderBytes)
+int __stdcall c_APECompress_StartEx(APE_COMPRESS_HANDLE hAPECompress, APE_CIO_HANDLE hCIO, const APE::WAVEFORMATEX * pwfeInput, int nMaxAudioBytes, int nCompressionLevel, const void * pHeaderData, int nHeaderBytes)
 {
-	return ((IAPECompress *)hAPECompress)->StartEx(new CallbackCIO(pCIO), pwfeInput, nMaxAudioBytes, nCompressionLevel, pHeaderData, nHeaderBytes);
+	return ((IAPECompress *)hAPECompress)->StartEx((CallbackCIO *) hCIO, pwfeInput, nMaxAudioBytes, nCompressionLevel, pHeaderData, nHeaderBytes);
 }
 
 int __stdcall c_APECompress_AddData(APE_COMPRESS_HANDLE hAPECompress, unsigned char * pData, int nBytes)
@@ -160,7 +197,7 @@ int __stdcall c_APECompress_AddData(APE_COMPRESS_HANDLE hAPECompress, unsigned c
     return ((IAPECompress *) hAPECompress)->AddData(pData, nBytes);
 }
 
-int __stdcall c_APECompress_GetBufferBytesAvailable(APE_COMPRESS_HANDLE hAPECompress)
+intn __stdcall c_APECompress_GetBufferBytesAvailable(APE_COMPRESS_HANDLE hAPECompress)
 {
     return ((IAPECompress *) hAPECompress)->GetBufferBytesAvailable();
 }
